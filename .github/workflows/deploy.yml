@@ -1,0 +1,50 @@
+name: Build Only (S3 deploy-ready)
+
+# ワークフローのトリガー設定
+# main ブランチへの push または PR が発生したときに実行
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ソースコードをチェックアウト（GitHubリポジトリの内容を取得）
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Node.js のセットアップ（バージョンは必要に応じて変更可能）
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # パッケージのインストール（package-lock.json を使ってインストール）
+      - name: Install dependencies
+        run: npm ci
+
+      # プロジェクトのビルド（例: Vite で `dist/` を生成）
+      - name: Build project
+        run: npm run build
+
+      # === ここから S3 デプロイ処理（必要になったらコメント解除） ===
+
+      # - name: Deploy to S3
+      #   uses: jakejarvis/s3-sync-action@v0.5.1
+      #   with:
+      #     args: --acl public-read --delete
+      #   env:
+      #     AWS_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      # ※補足：
+      # - dist/ ディレクトリが S3 にアップロードされます
+      # - AWS Secrets は GitHub リポジトリの Settings > Secrets に事前登録しておくこと
+
+      # === S3 デプロイ処理ここまで ===
