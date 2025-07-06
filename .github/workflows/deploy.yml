@@ -5,8 +5,6 @@ name: Build Only (S3 deploy-ready)
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -27,24 +25,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # プロジェクトのビルド（例: Vite で `dist/` を生成）
+      # プロジェクトのビルド（`build/` を生成）
       - name: Build project
         run: npm run build
 
-      # === ここから S3 デプロイ処理（必要になったらコメント解除） ===
-
-      # - name: Deploy to S3
-      #   uses: jakejarvis/s3-sync-action@v0.5.1
-      #   with:
-      #     args: --acl public-read --delete
-      #   env:
-      #     AWS_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: ${{ secrets.AWS_REGION }}
+      # S3 デプロイ
+      - name: Deploy to S3
+        uses: jakejarvis/s3-sync-action@v0.5.1
+        with:
+          args: --acl public-read --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SOURCE_DIR: build
 
       # ※補足：
-      # - dist/ ディレクトリが S3 にアップロードされます
+      # - `build/` ディレクトリ内のファイルが S3 にアップロードされます
       # - AWS Secrets は GitHub リポジトリの Settings > Secrets に事前登録しておくこと
-
-      # === S3 デプロイ処理ここまで ===
